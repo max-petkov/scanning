@@ -18,10 +18,10 @@
                 <svg preserveAspectRatio="xMidYMid slice" id="hero-svg" width="1640" height="895" viewBox="0 0 1640 895" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect opacity="0.25" width="1640" height="895" fill="none" />
                     <g class="edges" opacity="0.5">
-                        <rect x="1208" y="119" width="103" height="82" fill="#D9D9D9" />
-                        <rect x="1333" y="553" width="77" height="103" fill="#D9D9D9" />
-                        <rect x="753" y="221" width="77" height="103" fill="#D9D9D9" />
-                        <rect x="853" y="675" width="103" height="82" fill="#D9D9D9" />
+                        <rect data-img="top-left" x="753" y="221" width="77" height="103" fill="#D9D9D9" />
+                        <rect data-img="top-right" x="1208" y="119" width="103" height="82" fill="#D9D9D9" />
+                        <rect data-img="bottom-right" x="1333" y="553" width="77" height="103" fill="#D9D9D9" />
+                        <rect data-img="bottom-left" x="853" y="675" width="103" height="82" fill="#D9D9D9" />
                     </g>
                     <g class="circles">
                         <circle cx="913" cy="163" r="10" fill="#D9D9D9" />
@@ -54,9 +54,18 @@
             <div class="canvas-wrapper">
                 <canvas id="hero-canvas"></canvas>
             </div>
-            <div class="edgeds-container">
-                <div class="img-wrapper">
-                    <img src="" alt="">
+            <div class="edges-container">
+                <div class="img-wrapper" data-img="top-left">
+                    <img src="./top-left.png" alt="">
+                </div>
+                <div class="img-wrapper" data-img="top-right">
+                    <img src="./top-right.png" alt="">
+                </div>
+                <div class="img-wrapper" data-img="bottom-left">
+                    <img src="./bottom-left.png" alt="">
+                </div>
+                <div class="img-wrapper" data-img="bottom-right">
+                    <img src="./bottom-right.png" alt="">
                 </div>
             </div>
         </div>

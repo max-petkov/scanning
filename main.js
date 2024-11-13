@@ -228,24 +228,27 @@ class Canvas {
           d.x + amplitudeX * Math.sin(i * frequency) + (Math.random() * 4 + 1),
         y: () =>
           d.y + amplitudeY * Math.sin(i * frequency) + (Math.random() * 4 + 1),
-        duration: 5 + (Math.random() * 2 + 1),
+        duration: 3 + (Math.random() * 2 + 1),
         repeat: -1,
         yoyo: true,
-        ease: "elastic.inOut",
-        repeatRefresh: true,
+        ease: "power1.inOut",
+        // repeatRefresh: true,
       });
 
       this.tls.push(tl);
     });
 
-    this.lines.forEach((l, i) => {      
-      gsap.to(l, {
-        progress: 1,
-        duration: 0.2,
-        ease: "power1.inOut",
-        delay: () => i * 0.05,
+
+    setTimeout(() => {
+      this.lines.forEach((l, i) => {      
+        gsap.to(l, {
+          progress: 1,
+          duration: 0.3,
+          ease: "power1.inOut",
+          delay: () => i * 0.05,
+        });
       });
-    });
+    }, 500)
   }
 
   clear() {
@@ -474,10 +477,114 @@ class Edges {
   constructor() {
     this.svg = document.getElementById("hero-svg");
     this.edges = this.svg.querySelectorAll(".edges rect")
+    this.container = document.querySelector(".edges-container");
+    this.imgs = this.container.querySelectorAll(".edges-container .img-wrapper");
+    this.tl = gsap.timeline();
+
+    this.setPosition();
+    this.animate();
   }
 
+  setPosition() {
+    this.edges.forEach((edge) => {
+      const img = this.container.querySelector(`[data-img='${edge.getAttribute("data-img")}']`);      
+      const top = Math.abs(this.getRect(edge).top - this.getRect(this.container).top) + "px";
+      const left = Math.abs(this.getRect(edge).left - this.getRect(this.container).left) + "px";
+      const w = this.getRect(edge).width + "px";
+      const h = this.getRect(edge).height + "px";
+
+      img.style.top = top;
+      img.style.left = left;
+      img.style.width = w;
+      img.style.height = h;
+    });
+  }
+
+  getRect(el) {
+    const rect = el.getBoundingClientRect();
+
+    return {
+      top: rect.top + window.scrollY,
+      left: rect.left + window.scrollX,
+      bottom: rect.bottom + window.scrollY,
+      right: rect.right + window.scrollX,
+      width: rect.width,
+      height: rect.height,
+    };
+  }
   
+  animate() {
+    
+    this.tl.fromTo(this.imgs, {
+      x: (i, el) => {
+        if(!i) return "50%";
+        if(i === 1) return "-50%";
+        if(i === 2) return "50%";
+        if(i === 3) return "-50%";
+      },
+      y: (i, el) => {
+        if(!i) return "50%";
+        if(i === 1) return "50%";
+        if(i === 2) return "-50%";
+        if(i === 3) return "-50%";
+      },
+      rotate: 45,
+      scale: 0.9,
+      autoAlpha: 0,
+    }, {
+      rotate: 0,
+      scale: 1,
+      autoAlpha: 1,
+      x: 0,
+      y: 0,
+      delay: 1,
+      duration: 1.1,
+      ease: "expo.inOut",
+      onComplete: () => {
+        const canvas = new Canvas();
+        canvas.init();
+
+        this.mouseover();
+      }
+    }).to(this.imgs, {
+      x: (Math.random() * 5 + 1),
+      y: (Math.random() * 5 + 1),
+      duration: 3 + (Math.random() * 2 + 1),
+      repeat: -1,
+      yoyo: true,
+      ease: "power1.inOut",
+    });
+  }
+
+  mouseover() {
+    this.imgs.forEach(img => {
+      let animating = false;
+      img.addEventListener("mouseover", () => {
+        if(animating) return;
+
+        animating = true;
+        gsap.fromTo(img, {
+          scale: 1
+        }, {
+          scale: 0.9,
+          ease: "power2.inOut",
+          duration: 0.2,
+          onComplete: () => {
+            gsap.to(img, {
+              scale: 1,
+              duration: 0.2,
+              ease: "power2.inOut",
+              onComplete: () => {
+                animating = false;
+              }
+            })
+          }
+        })
+        
+      })
+    })
+  }
 }
 
-const canvas = new Canvas();
-canvas.init();
+// const canvas = new Canvas();
+const edges = new Edges();
