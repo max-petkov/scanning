@@ -185,7 +185,12 @@ class Canvas {
   update() {
     gsap.ticker.add(() => {
       this.clear();
-      this.dots.forEach((d) => d.create());
+      this.dots.forEach((d) => {
+        d.mouse.x = this.mouse.x;
+        d.mouse.y = this.mouse.y;
+
+        d.create();
+      });
       this.lines.forEach((l) => {
         l.create();
 
@@ -255,12 +260,20 @@ class Canvas {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
+  mousemove() {
+    window.addEventListener("mousemove", (event) => {
+      this.mouse.x = event.clientX;
+      this.mouse.y = event.clientY;      
+    });
+  }
+
   init() {
     this.setDots();
     this.setLines();
     this.update();
     this.animation();
     this.resize();
+    this.mousemove();
   }
 }
 
@@ -272,9 +285,11 @@ class Dot extends Canvas {
 
     this._x = 0;
     this.x = 0;
-
+    this.originalX = 0;
+    
     this._y = 0;
     this.y = 0;
+    this.originalY = 0;
 
     this._r = 0;
     this.r = 0;
@@ -286,6 +301,15 @@ class Dot extends Canvas {
 
     this._progress = 0;
     this.progress = 0;
+
+    this.mouse.x = 0;
+    this.mouse.y = 0;
+    this.dx = 0;
+    this.dy = 0;
+    this.distance = 0;
+    this.maxDistance = 75;
+    this.effectStrength = 15;
+    this.tween = null;
   }
 
   get x() {
@@ -293,6 +317,7 @@ class Dot extends Canvas {
   }
 
   set x(val) {
+    this.originalX = val;
     return (this._x = val);
   }
 
@@ -301,6 +326,7 @@ class Dot extends Canvas {
   }
 
   set y(val) {
+    this.originalY = val;
     return (this._y = val);
   }
 
@@ -345,6 +371,28 @@ class Dot extends Canvas {
   }
 
   create() {
+
+      // Calculate the distance from the mouse to the dot
+      this.dx = this.x - this.mouse.x;
+      this.dy = this.y - this.mouse.y;
+      this.distance = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
+  
+      // If the mouse is close enough, move the dot
+      if (this.distance < this.maxDistance) {
+        // Calculate the direction vector (normalized)
+        const angle = Math.atan2(this.dy, this.dx);
+        const moveX = Math.cos(angle) * this.effectStrength * (1 - this.distance / this.maxDistance);
+        const moveY = Math.sin(angle) * this.effectStrength * (1 - this.distance / this.maxDistance);
+  
+        // Apply movement to the dot's position
+        this._x = this.originalX + moveX;
+        this._y = this.originalY + moveY;
+      } else {
+        // Restore dot to original position if mouse is far
+        this._x = this.originalX;
+        this._y = this.originalY;
+      }
+
     const gradient = this.ctx.createRadialGradient(
       this._x,
       this._y,
@@ -566,7 +614,7 @@ class Edges {
         gsap.fromTo(img, {
           scale: 1
         }, {
-          scale: 0.9,
+          scale: 0.95,
           ease: "power2.inOut",
           duration: 0.2,
           onComplete: () => {
