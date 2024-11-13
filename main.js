@@ -17,6 +17,7 @@ class Canvas {
       y: null,
       r: (this._size.w / 80) * (this._size.h / 80),
     };
+    this.tls = [];
   }
 
   get size() {
@@ -52,7 +53,10 @@ class Canvas {
     this.svgDots.forEach((d, i) => {
       d.setAttribute("data-dot", i);
       const rect = d.getBoundingClientRect();
-      const x = rect.left + (rect.width / 2 + (window.innerWidth - document.documentElement.clientWidth) / 1.5);
+      const x =
+        rect.left +
+        (rect.width / 2 +
+          (window.innerWidth - document.documentElement.clientWidth) / 1.5);
       const y = rect.top + rect.height / 2;
       const r = Number(d.getAttribute("r"));
 
@@ -63,36 +67,49 @@ class Canvas {
       dot.r = r;
 
       this.dots.push(dot);
-
-      // Animation ⚡
-      // gsap.to(dot, {
-      //   x: dot.x + Math.random() * 15 - 5, // Move slightly left/right
-      //   y: dot.y + Math.random() * 15 - 5, // Move slightly up/down
-      //   duration: 2 + Math.random() * 1, // Randomize duration
-      //   r: dot.r + Math.random() * 5 - 2.5,
-      //   repeat: -1, // Infinite loop
-      //   yoyo: true, // Return to original position
-      //   ease: "sine.inOut", // Smooth easing
-      // });
     });
 
-    this.dots.forEach(d => d.dots = this.dots);
+    this.dots.forEach((d) => (d.dots = this.dots));
   }
 
   update() {
     gsap.ticker.add(() => {
       this.clear();
-      this.dots.forEach(d => d.update());
+      this.dots.forEach((d) => d.update());
     });
   }
 
-  animate() {
-    this.dots.forEach(d => {
-      console.log(d);
-      
+  animation() {
+    this.dots.forEach((d, i) => {
+      const tl = gsap.timeline();
+
+      const amplitudeX = 5; // Amplitude for horizontal movement
+      const amplitudeY = 4; // Amplitude for vertical movement
+      const frequency = 2; // Frequency of sine wave
+      tl.to(d, {
+        x: () =>
+          d.x + amplitudeX * Math.sin(i * frequency) + (Math.random() * 4 + 1),
+        y: () =>
+          d.y + amplitudeY * Math.sin(i * frequency) + (Math.random() * 4 + 1),
+        duration: 3 + (Math.random() * 3 + 1),
+        repeat: -1,
+        yoyo: true,
+        ease: "power1.inOut",
+      }).fromTo(
+        d,
+        { r: 0 },
+        {
+          r: d.r,
+          delay: i * 0.05,
+          duration: 0.2,
+          ease: "power1.inOut",
+        },
+        0
+      );
+
+      this.tls.push(tl);
     });
   }
-
 
   clear() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -101,7 +118,7 @@ class Canvas {
   init() {
     this.setDots();
     this.update();
-    this.animate();
+    this.animation();
     this.resize();
   }
 }
@@ -125,6 +142,9 @@ class Dot extends Canvas {
 
     this._revealed = false;
     this.revealed = false;
+
+    this._progress = 0;
+    this.progress = 0;
   }
 
   get x() {
@@ -164,7 +184,7 @@ class Dot extends Canvas {
   }
 
   set dots(val) {
-    return this._dots = val;
+    return (this._dots = val);
   }
 
   get revealed() {
@@ -172,7 +192,15 @@ class Dot extends Canvas {
   }
 
   set revealed(val) {
-    return this._revealed = val;
+    return (this._revealed = val);
+  }
+
+  get progress() {
+    return this._progress;
+  }
+
+  set progress(val) {
+    return (this._progress = val);
   }
 
   create() {
@@ -324,7 +352,10 @@ class Dot extends Canvas {
 
     this.ctx.beginPath();
     this.ctx.moveTo(start.x, start.y);
-    this.ctx.lineTo(end.x, end.y);
+    this.ctx.lineTo(
+      start.x + (end.x - start.x) * this._progress,
+      start.y + (end.y - start.y) * this._progress
+    );
     this.ctx.strokeStyle = gradient;
     this.ctx.lineWidth = 0.8;
     this.ctx.stroke();
@@ -333,7 +364,7 @@ class Dot extends Canvas {
 
   update() {
     this.create();
-    this.connect();
+    // this.connect();
   }
 }
 
