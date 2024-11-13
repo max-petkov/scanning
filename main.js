@@ -6,6 +6,7 @@ class Canvas {
     this.svg = document.getElementById("hero-svg");
     this.svgDots = this.svg.querySelectorAll("circle");
     this.dots = [];
+    this.lines = [];
     this.ctx = this.canvas.getContext("2d");
     this._size = {
       w: window.innerWidth,
@@ -72,10 +73,134 @@ class Canvas {
     this.dots.forEach((d) => (d.dots = this.dots));
   }
 
+  setLines() {
+    this.dots.forEach((d) => {
+      if (d.id === 0) {
+        this.setLine(d, this.dots[1]);
+        this.setLine(d, this.dots[4]);
+        this.setLine(d, this.dots[16]);
+      }
+
+      if (d.id === 1) {
+        this.setLine(d, this.dots[2]);
+        this.setLine(d, this.dots[4]);
+      }
+
+      if (d.id === 2) {
+        this.setLine(d, this.dots[3]);
+      }
+      
+      if (d.id === 3) {
+        this.setLine(d, this.dots[6]);
+      }
+
+      if (d.id === 4) {
+        this.setLine(d, this.dots[2]);
+        this.setLine(d, this.dots[5]);
+        this.setLine(d, this.dots[16]);
+      }
+      
+      if (d.id === 5) {
+        this.setLine(d, this.dots[7]);
+        this.setLine(d, this.dots[12]);
+        this.setLine(d, this.dots[14]);
+        this.setLine(d, this.dots[15]);
+      }
+      
+      if (d.id === 6) {
+        this.setLine(d, this.dots[5]);
+        this.setLine(d, this.dots[11]);
+        this.setLine(d, this.dots[12]);
+      }
+
+      if (d.id === 7) {
+        this.setLine(d, this.dots[9]);
+        this.setLine(d, this.dots[17]);
+        this.setLine(d, this.dots[20]);
+      }
+
+      if (d.id === 9) {
+        this.setLine(d, this.dots[22]);
+      }
+
+      if (d.id === 10) {
+        this.setLine(d, this.dots[9]);
+        this.setLine(d, this.dots[22]);
+      }
+
+      if (d.id === 11) {
+        this.setLine(d, this.dots[10]);
+      }
+
+      if (d.id === 12) {
+        this.setLine(d, this.dots[9]);
+        this.setLine(d, this.dots[11]);
+      }
+
+      if (d.id === 13) {
+        this.setLine(d, this.dots[14]);
+        this.setLine(d, this.dots[15]);
+        this.setLine(d, this.dots[17]);
+        this.setLine(d, this.dots[19]);
+      }
+
+      if (d.id === 14) {
+        this.setLine(d, this.dots[15]);
+        this.setLine(d, this.dots[17]);
+      }
+
+      if (d.id === 16) {
+        this.setLine(d, this.dots[15]);
+      }
+
+      if (d.id === 17) {
+        this.setLine(d, this.dots[19]);
+      }
+
+      if (d.id === 19) {
+        this.setLine(d, this.dots[21]);
+      }
+
+      if (d.id === 20) {
+        this.setLine(d, this.dots[21]);
+      }
+
+      if (d.id === 21) {
+        this.setLine(d, this.dots[22]);
+      }
+    });
+  }
+
+  setLine(startDot, endDot) {
+    const line = new Line();
+    line.startDot = startDot;
+    line.endDot = endDot;
+    line.startX = line.startDot.x;
+    line.startY = line.startDot.y;
+    line.endX = line.endDot.x;
+    line.endY = line.endDot.y;
+    this.lines.push(line);
+  }
+
   update() {
     gsap.ticker.add(() => {
       this.clear();
-      this.dots.forEach((d) => d.update());
+      this.dots.forEach((d) => d.create());
+      this.lines.forEach((l) => {
+        l.create();
+
+        this.dots.forEach(d => {
+          if(d.id === l.startDot.id) {
+            l.startX = d.x;
+            l.startY = d.y;
+          }
+          if(d.id === l.endDot.id) {
+            l.endX = d.x;
+            l.endY = d.y;
+          }
+        });
+
+      });
     });
   }
 
@@ -83,19 +208,11 @@ class Canvas {
     this.dots.forEach((d, i) => {
       const tl = gsap.timeline();
 
-      const amplitudeX = 5; // Amplitude for horizontal movement
-      const amplitudeY = 4; // Amplitude for vertical movement
-      const frequency = 2; // Frequency of sine wave
-      tl.to(d, {
-        x: () =>
-          d.x + amplitudeX * Math.sin(i * frequency) + (Math.random() * 4 + 1),
-        y: () =>
-          d.y + amplitudeY * Math.sin(i * frequency) + (Math.random() * 4 + 1),
-        duration: 3 + (Math.random() * 3 + 1),
-        repeat: -1,
-        yoyo: true,
-        ease: "power1.inOut",
-      }).fromTo(
+      const amplitudeX = 5;
+      const amplitudeY = 4;
+      const frequency = 2;
+      tl
+      .fromTo(
         d,
         { r: 0 },
         {
@@ -105,9 +222,29 @@ class Canvas {
           ease: "power1.inOut",
         },
         0
-      );
+      )
+      .to(d, {
+        x: () =>
+          d.x + amplitudeX * Math.sin(i * frequency) + (Math.random() * 4 + 1),
+        y: () =>
+          d.y + amplitudeY * Math.sin(i * frequency) + (Math.random() * 4 + 1),
+        duration: 5 + (Math.random() * 2 + 1),
+        repeat: -1,
+        yoyo: true,
+        ease: "elastic.inOut",
+        repeatRefresh: true,
+      });
 
       this.tls.push(tl);
+    });
+
+    this.lines.forEach((l, i) => {      
+      gsap.to(l, {
+        progress: 1,
+        duration: 0.2,
+        ease: "power1.inOut",
+        delay: () => i * 0.05,
+      });
     });
   }
 
@@ -117,6 +254,7 @@ class Canvas {
 
   init() {
     this.setDots();
+    this.setLines();
     this.update();
     this.animation();
     this.resize();
@@ -233,139 +371,112 @@ class Dot extends Canvas {
     this.ctx.closePath();
   }
 
-  connect() {
-    for (let i = 0; i < this.dots.length; i++) {
-      const dot = (i) => this.dots[i];
 
-      this.line(dot(0), dot(1));
+  update() {
+    this.create();
+  }
+}
 
-      if (dot(i).id === 0) {
-        this.line(dot(0), dot(1));
-        this.line(dot(0), dot(4));
-        this.line(dot(0), dot(16));
-      }
-
-      if (dot(i).id === 1) {
-        this.line(dot(1), dot(2));
-        this.line(dot(1), dot(4));
-      }
-
-      if (dot(i).id === 2) {
-        this.line(dot(2), dot(3));
-      }
-
-      if (dot(i).id === 3) {
-        this.line(dot(3), dot(6));
-      }
-
-      if (dot(i).id === 4) {
-        this.line(dot(4), dot(2));
-        this.line(dot(4), dot(5));
-        this.line(dot(4), dot(16));
-      }
-
-      if (dot(i).id === 5) {
-        this.line(dot(5), dot(7));
-        this.line(dot(5), dot(12));
-        this.line(dot(5), dot(15));
-        this.line(dot(5), dot(14));
-      }
-
-      if (dot(i).id === 6) {
-        this.line(dot(6), dot(5));
-        this.line(dot(6), dot(11));
-        this.line(dot(6), dot(12));
-      }
-
-      if (dot(i).id === 7) {
-        this.line(dot(7), dot(9));
-        this.line(dot(7), dot(17));
-        this.line(dot(7), dot(20));
-      }
-
-      if (dot(i).id === 9) {
-        this.line(dot(9), dot(22));
-      }
-
-      if (dot(i).id === 10) {
-        this.line(dot(10), dot(9));
-        this.line(dot(10), dot(22));
-      }
-
-      if (dot(i).id === 11) {
-        this.line(dot(11), dot(10));
-      }
-
-      if (dot(i).id === 12) {
-        this.line(dot(12), dot(9));
-        this.line(dot(12), dot(11));
-      }
-
-      if (dot(i).id === 13) {
-        this.line(dot(13), dot(14));
-        this.line(dot(13), dot(15));
-        this.line(dot(13), dot(17));
-        this.line(dot(13), dot(19));
-      }
-
-      if (dot(i).id === 14) {
-        this.line(dot(14), dot(15));
-        this.line(dot(14), dot(17));
-      }
-
-      if (dot(i).id === 15) {
-      }
-
-      if (dot(i).id === 16) {
-        this.line(dot(16), dot(15));
-      }
-
-      if (dot(i).id === 17) {
-        this.line(dot(17), dot(19));
-      }
-
-      if (dot(i).id === 19) {
-        this.line(dot(19), dot(21));
-      }
-
-      if (dot(i).id === 20) {
-        this.line(dot(20), dot(21));
-      }
-
-      if (dot(i).id === 21) {
-        this.line(dot(21), dot(22));
-      }
-    }
+class Line extends Canvas {
+  constructor() {
+    super();
+    this._startX = 0;
+    this._endX = 0;
+    this._startY = 0;
+    this._endY = 0;
+    this._progress = 0;
+    this._startDot = null;
+    this._endDot = null;
   }
 
-  line(start, end) {
+  get startX() {
+    return this._startX;
+  }
+
+  set startX(val) {
+    return (this._startX = val);
+  }
+
+  get startY() {
+    return this._startY;
+  }
+
+  set startY(val) {
+    return (this._startY = val);
+  }
+
+  get endX() {
+    return this._endX;
+  }
+
+  set endX(val) {
+    return (this._endX = val);
+  }
+
+  get endY() {
+    return this._endY;
+  }
+
+  set endY(val) {
+    return (this._endY = val);
+  }
+
+  get progress() {
+    return this._progress;
+  }
+
+  set progress(val) {
+    return (this._progress = val);
+  }
+
+  get startDot() {
+    return this._startDot;
+  }
+
+  set startDot(val) {
+    return (this._startDot = val);
+  }
+
+  get endDot() {
+    return this._endDot;
+  }
+
+  set endDot(val) {
+    return (this._endDot = val);
+  }
+
+  create() {
     const gradient = this.ctx.createRadialGradient(
-      start.x,
-      start.y,
+      this._startX,
+      this._startY,
       32,
-      end.x,
-      end.y,
+      this._endX,
+      this._endY,
       16
     );
     gradient.addColorStop(0.7, "rgba(255, 255, 255, 1)");
     gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
 
     this.ctx.beginPath();
-    this.ctx.moveTo(start.x, start.y);
+    this.ctx.moveTo(this._startX, this._startY);
     this.ctx.lineTo(
-      start.x + (end.x - start.x) * this._progress,
-      start.y + (end.y - start.y) * this._progress
+      this._startX + (this._endX - this._startX) * this._progress,
+      this._startY + (this._endY - this._startY) * this._progress
     );
     this.ctx.strokeStyle = gradient;
     this.ctx.lineWidth = 0.8;
     this.ctx.stroke();
     this.ctx.closePath();
   }
+}
 
-  update() {
-    this.create();
-    // this.connect();
+class Edges {
+  constructor() {
+    this.svg = document.getElementById("hero-svg");
+    this.edges = this.svg.querySelectorAll(".edges rect")
   }
+
+  
 }
 
 const canvas = new Canvas();
