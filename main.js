@@ -1,6 +1,10 @@
+// TODO
+// Refactor
+// Add animation on dots
+
 "use strict";
 
-class Canvas {
+class Scan {
   constructor() {
     this.canvas = document.getElementById("hero-canvas");
     this.svg = document.getElementById("hero-svg");
@@ -18,7 +22,7 @@ class Canvas {
       y: null,
       r: (this._size.w / 80) * (this._size.h / 80),
     };
-    this.tls = [];
+    this.tlsRepeat = [];
   }
 
   get size() {
@@ -249,50 +253,47 @@ class Canvas {
   }
 
   animation() {
-    this.dots.forEach((d, i) => {
-      const tl = gsap.timeline();
+    const tls = [];
+    gsap.fromTo(this.dots, {
+      opacity: 0
+    },{
+      delay: 0.5,
+        opacity: 1,
+        duration: 0.5,
+        ease: "sine.inOut",
+        stagger: {
+          each: 0.13,
+          from: "start",
+          onComplete: function() {
+            const d = this.targets()[0];
+            const tl = gsap.timeline();
 
-      const amplitudeX = 5;
-      const amplitudeY = 4;
-      const frequency = 2;
-      tl
-      .fromTo(
-        d,
-        { r: 0 },
-        {
-          r: d.r,
-          delay: i * 0.05,
-          duration: 0.2,
-          ease: "power1.inOut",
+            tl.to(this.targets()[0], {
+              x: () => d.x + gsap.utils.random(-5, 5),
+              y: () => d.y + gsap.utils.random(-5, 5),
+              repeat: -1,
+              repeatRefresh: true,
+              yoyo: true,
+              delay: 0.1,
+              duration: 3,
+              ease: "power1.inOut"
+            });
+            
+          }
         },
-        0
-      )
-      .to(d, {
-        x: () =>
-          d.x + amplitudeX * Math.sin(i * frequency) + (Math.random() * 4 + 1),
-        y: () =>
-          d.y + amplitudeY * Math.sin(i * frequency) + (Math.random() * 4 + 1),
-        duration: 3 + (Math.random() * 2 + 1),
-        repeat: -1,
-        yoyo: true,
-        ease: "power1.inOut",
-        // repeatRefresh: true,
       });
 
-      this.tls.push(tl);
+    gsap.to(this.lines, {
+      delay: 0.3,
+      progress: 1,
+      duration: 1,
+      ease: "expo.inOut",
+      stagger: 0.07,
+      onComplete: () => {
+        this.dots.forEach(d => d.collide = true);
+      }
     });
 
-
-    setTimeout(() => {
-      this.lines.forEach((l, i) => {      
-        gsap.to(l, {
-          progress: 1,
-          duration: 0.3,
-          ease: "power1.inOut",
-          delay: () => i * 0.05,
-        });
-      });
-    }, 500)
   }
 
   clear() {
@@ -316,7 +317,7 @@ class Canvas {
   }
 }
 
-class Dot extends Canvas {
+class Dot extends Scan {
   constructor() {
     super();
     this._id = "";
@@ -342,6 +343,8 @@ class Dot extends Canvas {
 
     this._visible = true;
 
+    this._collide = false;
+
     this.mouse.x = 0;
     this.mouse.y = 0;
     this.dx = 0;
@@ -357,6 +360,14 @@ class Dot extends Canvas {
 
   set visible(val) {
     return (this._visible = val);
+  }
+
+  get collide() {
+    return this._collide;
+  }
+
+  set collide(val) {
+    return (this._collide = val);
   }
 
   get x() {
@@ -443,6 +454,8 @@ class Dot extends Canvas {
   }
 
   mouseCollision() {
+    if(!this._collide) return;
+
     // Calculate the distance from the mouse to the dot
     this.dx = this.x - this.mouse.x;
     this.dy = this.y - this.mouse.y;
@@ -471,7 +484,7 @@ class Dot extends Canvas {
   }
 }
 
-class Line extends Canvas {
+class Line extends Scan {
   constructor() {
     super();
     this._startX = 0;
@@ -564,8 +577,8 @@ class Line extends Canvas {
   }
 }
 
-class Edges {
-  constructor() {
+class Focus {
+  constructor(cb) {
     this.svg = document.getElementById("hero-svg");
     this.edges = this.svg.querySelectorAll(".svg-edges rect")
     this.container = document.querySelector(".edges-container");
@@ -575,7 +588,7 @@ class Edges {
     this.tl = gsap.timeline();
 
     this.setPosition();
-    this.animate();
+    this.animate(cb);
   }
 
   setPosition() {
@@ -606,7 +619,7 @@ class Edges {
     };
   }
   
-  animate() {    
+  animate(cb) {    
     this.tl.fromTo(this.imgs, {
       x: (i) => {
         if(!i) return "50%";
@@ -620,11 +633,9 @@ class Edges {
         if(i === 2) return "-50%";
         if(i === 3) return "-50%";
       },
-      rotate: 45,
       scale: 0.9,
       autoAlpha: 0,
     }, {
-      rotate: 0,
       scale: 1,
       autoAlpha: 1,
       x: 0,
@@ -632,10 +643,9 @@ class Edges {
       delay: 1,
       duration: 1,
       ease: "expo.inOut",
-      onComplete: () => {
-        const canvas = new Canvas();
-        canvas.init();
-      }
+      onComplete:() => {
+        if(typeof cb === "function") return cb();
+    },
     })
     .to(this.imgs,{
       x: (i) => {
@@ -650,16 +660,15 @@ class Edges {
         if(i === 2) return "-20%";
         if(i === 3) return "-20%";
       },
-      ease: "expo.out",
-      scale: 0.8,
+      ease: "expo.inOut",
+      scale: 0.9,
     }, "<90%")
     .to(this.imgs,{
       x: 0,
       y: 0,
-      ease: "expo.inOut",
-      duration: 0.5,
+      ease: "expo.out",
+      duration: 1,
       scale: 1,
-      delay: 2.8,
     })
     .to(this.imgs, {
       x: () => gsap.utils.random(-8, 8),
@@ -673,6 +682,11 @@ class Edges {
   }
 }
 
-// const canvas = new Canvas();
-// canvas.init();
-const edges = new Edges();
+// const scan = new Scan();
+// scan.init();
+const scan = new Scan();
+const focus = new Focus(() => scan.init());
+
+
+
+
