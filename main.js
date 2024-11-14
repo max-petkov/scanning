@@ -572,7 +572,7 @@ class Edges {
     this.imgs = this.container.querySelectorAll(".edges-container .img-wrapper");
     this.face = this.svg.querySelector(".svg-face");
     this.animating = false;
-    this.repeatAnimation = gsap.timeline();
+    this.tl = gsap.timeline();
 
     this.setPosition();
     this.animate();
@@ -606,17 +606,15 @@ class Edges {
     };
   }
   
-  animate() {
-    const tl = gsap.timeline();
-    
-    tl.fromTo(this.imgs, {
-      x: (i, el) => {
+  animate() {    
+    this.tl.fromTo(this.imgs, {
+      x: (i) => {
         if(!i) return "50%";
         if(i === 1) return "-50%";
         if(i === 2) return "50%";
         if(i === 3) return "-50%";
       },
-      y: (i, el) => {
+      y: (i) => {
         if(!i) return "50%";
         if(i === 1) return "50%";
         if(i === 2) return "-50%";
@@ -664,13 +662,13 @@ class Edges {
       delay: 2.8,
     })
     .to(this.imgs, {
-      x: () => gsap.utils.random(-6, 6),
-      y: () => gsap.utils.random(-6, 6),
+      x: () => gsap.utils.random(-8, 8),
+      y: () => gsap.utils.random(-8, 8),
       duration: 3,
       repeat: -1,
       yoyo: true,
       ease: "power1.inOut",
-      overwrite: "auto",
+      repeatRefresh: true,
     });
   }
 }
