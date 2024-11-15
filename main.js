@@ -203,7 +203,7 @@ class Scan {
   }
 
   update() {
-    gsap.ticker.add(() => {
+    // gsap.ticker.add(() => {
       this.clear();
 
       this.dots.forEach((d) => {
@@ -228,7 +228,7 @@ class Scan {
         l.create();
 
       });
-    });
+    // });
   }
 
   animation() {
@@ -289,6 +289,7 @@ class Scan {
     this.dots.forEach(d => !d.animation ? null : d.animation.kill());
     this.dots = [];
     this.lines = [];
+    gsap.ticker.remove(this.update.bind(this));
   }
 
   init() {
@@ -297,6 +298,7 @@ class Scan {
     this.update();
     this.animation();
     this.mousemove();
+    gsap.ticker.add(this.update.bind(this));
   }
 }
 
@@ -673,6 +675,7 @@ class Focus {
 }
 
 
+// Initiate Animation
 (()=> {
   let w = window.innerWidth;
   let scan = new Scan();
