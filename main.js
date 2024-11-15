@@ -1,7 +1,3 @@
-// TODO
-// Refactor
-// Add animation on dots
-
 "use strict";
 
 class Scan {
@@ -262,6 +258,7 @@ class Scan {
             });
 
             d.animation = tl;
+            d.collide = true;
           }
         },
       });
@@ -272,9 +269,6 @@ class Scan {
       duration: 1,
       ease: "expo.inOut",
       stagger: 0.07,
-      onComplete: () => {
-        this.dots.forEach(d => d.collide = true);
-      }
     });
 
   }
