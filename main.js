@@ -22,7 +22,6 @@ class Scan {
       y: null,
       r: (this._size.w / 80) * (this._size.h / 80),
     };
-    this.tlsRepeat = [];
   }
 
   get size() {
@@ -36,22 +35,6 @@ class Scan {
     this.canvas.height = this._size.h;
 
     return this._size;
-  }
-
-  resize() {
-    let w = window.innerWidth;
-
-    window.addEventListener("resize", () => {
-      if (w !== window.innerWidth) {
-        w = window.innerHeight;
-
-        this.clear();
-        this.size = {
-          w: window.innerWidth,
-          h: window.innerHeight,
-        };
-      }
-    });
   }
 
   setDots() {
@@ -253,7 +236,6 @@ class Scan {
   }
 
   animation() {
-    const tls = [];
     gsap.fromTo(this.dots, {
       opacity: 0
     },{
@@ -278,7 +260,8 @@ class Scan {
               duration: 3,
               ease: "power1.inOut"
             });
-            
+
+            d.animation = tl;
           }
         },
       });
@@ -307,12 +290,18 @@ class Scan {
     });
   }
 
+  destroy() {
+    this.clear();
+    this.dots.forEach(d => !d.animation ? null : d.animation.kill());
+    this.dots = [];
+    this.lines = [];
+  }
+
   init() {
     this.setDots();
     this.setLines();
     this.update();
     this.animation();
-    this.resize();
     this.mousemove();
   }
 }
@@ -352,6 +341,7 @@ class Dot extends Scan {
     this.distance = 0;
     this.maxDistance = 100;
     this.effectStrength = 20;
+    this.animation = null;
   }
 
   get visible() {
@@ -476,11 +466,6 @@ class Dot extends Scan {
       this._x = this.originalX;
       this._y = this.originalY;
     }
-  }
-
-
-  update() {
-    this.create();
   }
 }
 
@@ -680,13 +665,39 @@ class Focus {
       repeatRefresh: true,
     });
   }
+
+  destroy() {
+    this.tl.kill();
+
+    this.imgs.forEach((img) => {
+      img.style.top = "";
+      img.style.left = "";
+      img.style.width = "";
+      img.style.height = "";
+    });
+  }
 }
 
-// const scan = new Scan();
-// scan.init();
-const scan = new Scan();
-const focus = new Focus(() => scan.init());
 
+(()=> {
+  let w = window.innerWidth;
+  let scan = new Scan();
+  let focus = new Focus(() => scan.init());
 
+  function resetScan() {
+    scan.destroy();
+    focus.destroy();
+
+    scan = new Scan();
+    focus = new Focus(() => scan.init());
+  }
+
+  window.addEventListener("resize", () => {
+    if (w !== window.innerWidth) {
+      w = window.innerHeight;
+      resetScan();
+    }
+  });
+})();
 
 
